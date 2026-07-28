@@ -68,9 +68,11 @@ class SandboxService:
 
     @staticmethod
     def write_file(sandbox_id: str, path: str, content: str) -> str:
-        # base64 chars (A-Za-z0-9+/=) are safe unquoted inside single-quote shell strings
+        clean = os.path.normpath(path.lstrip('/'))
+        if clean.startswith('..'):
+            return f"Error: invalid path {path}"
         b64 = base64.b64encode(content.encode()).decode()
-        full_path = f"{WORKDIR}/{path.lstrip('/')}"
+        full_path = f"{WORKDIR}/{clean}"
         cmd = f"mkdir -p $(dirname {full_path}) && echo '{b64}' | base64 -d > {full_path}"
         rc, _, err = _run("exec", sandbox_id, cmd, timeout=30)
         if rc == 0:
@@ -100,10 +102,14 @@ class SandboxService:
 
     @staticmethod
     def freeze_sandbox(sandbox_id: str) -> None:
-        # stop preserves the container state; destroy would remove it
         _run("stop", sandbox_id, timeout=30)
         if sandbox_id in _sandboxes:
             _sandboxes[sandbox_id]["status"] = "frozen"
+
+    @staticmethod
+    def destroy_sandbox(sandbox_id: str) -> None:
+        _run("destroy", sandbox_id, timeout=30)
+        _sandboxes.pop(sandbox_id, None)
 
     @staticmethod
     def get_stdout(sandbox_id: str) -> list[str]:

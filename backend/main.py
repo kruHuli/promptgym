@@ -48,7 +48,13 @@ async def startup():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    try:
+        async with AsyncSessionLocal() as db:
+            await db.execute(select(1))
+        return {"status": "ok"}
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"status": "error", "detail": str(e)}, status_code=503)
 
 
 # Serve frontend static files in production

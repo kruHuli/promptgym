@@ -22,14 +22,22 @@ export function useSessionWS(sessionId: number | null) {
   const [sandboxStdout, setSandboxStdout] = useState<string[]>([])
   const [timerRemaining, setTimerRemaining] = useState<number | null>(null)
   const [sessionStatus, setSessionStatus] = useState<string>('active')
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'open' | 'closed'>('connecting')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const ws = useRef<WebSocket | null>(null)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // ref so the onclose closure always reads the current status without going stale
+  const sessionStatusRef = useRef('active')
 
   const connect = useCallback(() => {
     if (!sessionId) return
-    const url = `${WS_BASE}/sessions/${sessionId}/stream`
-    const socket = new WebSocket(url)
+    // StrictMode runs effects twice — skip if a socket is already open/connecting
+    if (ws.current?.readyState === WebSocket.OPEN || ws.current?.readyState === WebSocket.CONNECTING) return
+    setWsStatus('connecting')
+    const socket = new WebSocket(`${WS_BASE}/sessions/${sessionId}/stream`)
     ws.current = socket
+
+    socket.onopen = () => setWsStatus('open')
 
     socket.onmessage = (evt) => {
       try {
@@ -44,22 +52,25 @@ export function useSessionWS(sessionId: number | null) {
         } else if (event.type === 'timer') {
           setTimerRemaining((event.data as { remaining_seconds: number }).remaining_seconds)
         } else if (event.type === 'status') {
+          sessionStatusRef.current = event.data as string
           setSessionStatus(event.data as string)
+        } else if (event.type === 'error') {
+          setErrorMsg(event.data as string)
         }
-      } catch {
-        // ignore parse errors
+      } catch (e) {
+        console.warn('WS parse error', evt.data, e)
       }
     }
 
     socket.onclose = () => {
-      // Auto-reconnect after 2s unless session is done
+      setWsStatus('closed')
       reconnectTimer.current = setTimeout(() => {
-        if (sessionStatus === 'active') connect()
+        if (sessionStatusRef.current === 'active') connect()
       }, 2000)
     }
 
     socket.onerror = () => socket.close()
-  }, [sessionId, sessionStatus])
+  }, [sessionId])
 
   useEffect(() => {
     connect()
@@ -67,7 +78,7 @@ export function useSessionWS(sessionId: number | null) {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current)
       ws.current?.close()
     }
-  }, [sessionId])  // only reconnect when sessionId changes
+  }, [sessionId])
 
-  return { messages, files, sandboxStdout, timerRemaining, sessionStatus }
+  return { messages, files, sandboxStdout, timerRemaining, sessionStatus, wsStatus, errorMsg }
 }

@@ -7,7 +7,7 @@ from sqlalchemy import select
 import config
 from models import Session, Message, Submission, Score
 
-client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
+client = AsyncOpenAI(api_key=config.OPENAI_API_KEY, timeout=120.0)
 
 JUDGE_SYSTEM = """You are a strict, expert judge evaluating an AI-assisted coding session.
 Score the submission on 5 dimensions, each 0-20 points:
@@ -87,7 +87,12 @@ async def grade_submission(session_id: int, submission_id: int, db: AsyncSession
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
-        data = {}
+        from services.agent_service import get_queues
+        for q in get_queues().get(session_id, []):
+            await q.put({"type": "error", "data": "Judge returned invalid response. Try re-submitting."})
+        sess.status = "grading_failed"
+        await db.commit()
+        return
 
     # Clamp scores 0-20
     def clamp(v, lo=0, hi=20):
@@ -134,11 +139,10 @@ async def grade_submission(session_id: int, submission_id: int, db: AsyncSession
 
 
 async def _cost_percentile(cost: float, db: AsyncSession) -> float:
-    """Percentile of this cost among all graded sessions (multi-user correct)."""
-    from scipy.stats import percentileofscore
+    """Percentile of this cost among all previously graded sessions. Lower cost = higher percentile."""
     result = await db.execute(select(Score.token_cost_total))
     all_costs = [row[0] for row in result.fetchall()]
     if not all_costs:
-        return 50.0
-    all_costs.append(cost)
-    return float(percentileofscore(all_costs, cost, kind="rank"))
+        return 100.0
+    # cheaper than others = better = higher percentile
+    return round(sum(1 for c in all_costs if c > cost) / len(all_costs) * 100, 1)

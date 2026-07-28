@@ -9,18 +9,25 @@ export default function Results() {
   const navigate = useNavigate()
   const [score, setScore] = useState<Score | null>(null)
   const [loading, setLoading] = useState(true)
-  const [polling, setPolling] = useState(true)
+  const [timedOut, setTimedOut] = useState(false)
 
   useEffect(() => {
     if (!sessionId) return
+    let attempts = 0
     let timer: ReturnType<typeof setInterval>
 
     const poll = async () => {
+      attempts++
+      if (attempts > 60) {
+        clearInterval(timer)
+        setLoading(false)
+        setTimedOut(true)
+        return
+      }
       const s = await api.getScore(sessionId)
       if (s) {
         setScore(s)
         setLoading(false)
-        setPolling(false)
         clearInterval(timer)
       }
     }
@@ -29,6 +36,16 @@ export default function Results() {
     timer = setInterval(poll, 2000)
     return () => clearInterval(timer)
   }, [sessionId])
+
+  if (timedOut) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="text-accent-danger text-sm">Grading timed out</div>
+        <div className="text-text-muted text-xs font-mono">The judge LLM did not respond within 2 minutes.</div>
+        <button className="btn-ghost mt-2" onClick={() => navigate('/')}>Back to challenges</button>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

@@ -99,7 +99,11 @@ async def send_message(
 
 async def _run_agent_bg(session_id: int, content: str, sandbox_id: str):
     async with AsyncSessionLocal() as db:
-        await run_agent_turn(session_id, content, sandbox_id, db)
+        try:
+            await run_agent_turn(session_id, content, sandbox_id, db)
+        except Exception as e:
+            for q in session_queues.get(session_id, []):
+                await q.put({"type": "error", "data": str(e)})
 
 
 @router.post("/{session_id}/submit")
@@ -116,8 +120,10 @@ async def submit_session(
     sess.submitted_at = datetime.utcnow()
 
     if sess.sandbox_id:
-        SandboxService.freeze_sandbox(sess.sandbox_id)
         stdout_log = "\n".join(SandboxService.get_stdout(sess.sandbox_id))
+        SandboxService.freeze_sandbox(sess.sandbox_id)
+        SandboxService.destroy_sandbox(sess.sandbox_id)
+        sess.sandbox_id = None
     else:
         stdout_log = ""
 
@@ -140,7 +146,15 @@ async def submit_session(
 
 async def _grade_bg(session_id: int, submission_id: int):
     async with AsyncSessionLocal() as db:
-        await grade_submission(session_id, submission_id, db)
+        try:
+            await grade_submission(session_id, submission_id, db)
+        except Exception as e:
+            for q in session_queues.get(session_id, []):
+                await q.put({"type": "error", "data": f"Grading failed: {e}"})
+            sess = await db.get(Session, session_id)
+            if sess:
+                sess.status = "grading_failed"
+                await db.commit()
 
 
 @router.get("/{session_id}/score", response_model=ScoreOut | None)

@@ -5,9 +5,10 @@ interface ChatPanelProps {
   messages: WSMessage[]
   onSend: (content: string) => void
   disabled?: boolean
+  isWorking?: boolean
 }
 
-export function ChatPanel({ messages, onSend, disabled }: ChatPanelProps) {
+export function ChatPanel({ messages, onSend, disabled, isWorking }: ChatPanelProps) {
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -51,6 +52,17 @@ export function ChatPanel({ messages, onSend, disabled }: ChatPanelProps) {
             ) : null}
           </div>
         ))}
+        {isWorking && (
+          <div className="flex flex-col gap-1 items-start">
+            <div className="text-xs text-text-muted">agent</div>
+            <div className="bg-bg-elevated border border-bg-border rounded-lg px-3 py-2 text-sm font-mono text-text-muted flex items-center gap-1">
+              <span className="animate-pulse">working</span>
+              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 

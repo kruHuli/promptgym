@@ -17,6 +17,12 @@ COST_TABLE = {
     "gpt-5.6-sol": {"input": 0.005, "output": 0.030},
 }
 
+import sys
+if not OPENAI_API_KEY:
+    print("ERROR: OPENAI_API_KEY is not set", file=sys.stderr)
+    sys.exit(1)
+
+
 def compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     rates = COST_TABLE.get(model, COST_TABLE["gpt-4o"])
     return (input_tokens / 1000) * rates["input"] + (output_tokens / 1000) * rates["output"]

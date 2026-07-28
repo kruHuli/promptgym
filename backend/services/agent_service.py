@@ -9,7 +9,7 @@ import config
 from models import Message, Session
 from services.sandbox_service import SandboxService
 
-client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
+client = AsyncOpenAI(api_key=config.OPENAI_API_KEY, timeout=120.0)
 
 SYSTEM_PROMPT = """You are a coding agent helping a user build an app in a timed challenge.
 You have filesystem access via tool calls. Scaffold, write files, run commands.

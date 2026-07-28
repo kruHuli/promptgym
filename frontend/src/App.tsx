@@ -1,9 +1,32 @@
+import React from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Lobby from './pages/Lobby'
 import ChallengeBrief from './pages/ChallengeBrief'
 import LiveBuild from './pages/LiveBuild'
 import Results from './pages/Results'
 import Dashboard from './pages/Dashboard'
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: string | null }
+> {
+  state = { error: null }
+  static getDerivedStateFromError(e: Error) { return { error: e.message } }
+  render() {
+    if (this.state.error) return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="text-accent-danger mb-2">Something went wrong</div>
+          <div className="text-xs font-mono text-text-muted">{this.state.error}</div>
+          <button className="btn-ghost mt-4" onClick={() => this.setState({ error: null })}>
+            Try again
+          </button>
+        </div>
+      </div>
+    )
+    return this.props.children
+  }
+}
 
 export default function App() {
   return (
@@ -23,13 +46,21 @@ export default function App() {
             </Link>
           </div>
         </nav>
-        <Routes>
-          <Route path="/" element={<Lobby />} />
-          <Route path="/challenges/:id" element={<ChallengeBrief />} />
-          <Route path="/sessions/:id" element={<LiveBuild />} />
-          <Route path="/sessions/:id/results" element={<Results />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Lobby />} />
+            <Route path="/challenges/:id" element={<ChallengeBrief />} />
+            <Route path="/sessions/:id" element={<LiveBuild />} />
+            <Route path="/sessions/:id/results" element={<Results />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={
+              <div className="text-text-muted text-center py-20">
+                404 — Page not found.{' '}
+                <Link to="/" className="text-accent-primary hover:underline">Go home</Link>
+              </div>
+            } />
+          </Routes>
+        </ErrorBoundary>
       </div>
     </BrowserRouter>
   )

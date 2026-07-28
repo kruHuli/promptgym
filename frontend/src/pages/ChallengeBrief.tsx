@@ -6,6 +6,7 @@ export default function ChallengeBrief() {
   const { id } = useParams<{ id: string }>()
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [starting, setStarting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function ChallengeBrief() {
       const session = await api.createSession(challenge.id)
       navigate(`/sessions/${session.id}`)
     } catch (e) {
-      alert('Failed to start session')
+      setError('Failed to start session. Is the backend running?')
       setStarting(false)
     }
   }
@@ -60,6 +61,12 @@ export default function ChallengeBrief() {
         </pre>
       </div>
 
+      {error && (
+        <div className="text-accent-danger text-sm mb-4 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded flex items-center justify-between">
+          {error}
+          <button onClick={() => setError(null)} className="text-xs underline ml-4">Dismiss</button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div className="text-text-muted text-sm">
           You'll direct an AI agent to build this. Your prompts are scored too.

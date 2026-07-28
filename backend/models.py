@@ -26,9 +26,9 @@ class Challenge(Base):
 class Session(Base):
     __tablename__ = "sessions"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
-    challenge_id: Mapped[int] = mapped_column(Integer, ForeignKey("challenges.id"))
-    status: Mapped[str] = mapped_column(String(20), default="active")  # 'active'|'submitted'|'graded'|'abandoned'
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True)
+    challenge_id: Mapped[int] = mapped_column(Integer, ForeignKey("challenges.id"), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")  # 'active'|'submitted'|'graded'|'abandoned'|'grading_failed'
     started_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sandbox_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -41,7 +41,7 @@ class Session(Base):
 class Message(Base):
     __tablename__ = "messages"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("sessions.id"))
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("sessions.id"), index=True)
     role: Mapped[str] = mapped_column(String(20))  # 'user'|'agent'|'system'
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
@@ -54,7 +54,7 @@ class Message(Base):
 class Submission(Base):
     __tablename__ = "submissions"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("sessions.id"))
+    session_id: Mapped[int] = mapped_column(Integer, ForeignKey("sessions.id"), index=True)
     file_snapshot_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
     execution_log: Mapped[str | None] = mapped_column(Text, nullable=True)
     screenshot_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
@@ -66,7 +66,7 @@ class Submission(Base):
 class Score(Base):
     __tablename__ = "scores"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    submission_id: Mapped[int] = mapped_column(Integer, ForeignKey("submissions.id"))
+    submission_id: Mapped[int] = mapped_column(Integer, ForeignKey("submissions.id"), index=True)
     requirements_coverage: Mapped[float] = mapped_column(Float, default=0)
     functional_correctness: Mapped[float] = mapped_column(Float, default=0)
     code_quality: Mapped[float] = mapped_column(Float, default=0)

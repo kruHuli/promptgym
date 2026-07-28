@@ -6,6 +6,7 @@ export default function Lobby() {
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function Lobby() {
       const ch = await api.generateChallenge()
       setChallenges((prev) => [ch, ...prev])
     } catch (e) {
-      alert('Failed to generate challenge. Check OPENAI_API_KEY.')
+      setError('Failed to generate challenge. Check OPENAI_API_KEY.')
     } finally {
       setGenerating(false)
     }
@@ -47,6 +48,12 @@ export default function Lobby() {
         </button>
       </div>
 
+      {error && (
+        <div className="text-accent-danger text-sm mb-4 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded flex items-center justify-between">
+          {error}
+          <button onClick={() => setError(null)} className="text-xs underline ml-4">Dismiss</button>
+        </div>
+      )}
       {loading ? (
         <div className="text-text-muted text-center py-20">Loading challenges...</div>
       ) : challenges.length === 0 ? (

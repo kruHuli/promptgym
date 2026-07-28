@@ -15,8 +15,10 @@ export default function LiveBuild() {
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'logs'>('chat')
+  const [errorDismissed, setErrorDismissed] = useState<string | null>(null)
 
-  const { messages, files, sandboxStdout, timerRemaining, sessionStatus } = useSessionWS(sessionId)
+  const { messages, files, sandboxStdout, timerRemaining, sessionStatus, wsStatus, errorMsg } = useSessionWS(sessionId)
+  const visibleError = errorMsg && errorMsg !== errorDismissed ? errorMsg : null
 
   useEffect(() => {
     if (!sessionId) return
@@ -59,6 +61,9 @@ export default function LiveBuild() {
         {challenge && (
           <span className="text-text-secondary text-xs truncate max-w-xs">{challenge.title}</span>
         )}
+        {wsStatus === 'closed' && (
+          <span className="text-accent-warning text-xs font-mono animate-pulse">Reconnecting...</span>
+        )}
         <div className="ml-auto flex items-center gap-2">
           {sessionStatus === 'active' && (
             <button
@@ -99,7 +104,20 @@ export default function LiveBuild() {
 
           <div className="flex-1 overflow-hidden">
             {activeTab === 'chat' && (
-              <ChatPanel messages={messages} onSend={handleSend} disabled={isDone} />
+              <>
+                {visibleError && (
+                  <div className="text-accent-danger text-xs p-2 bg-accent-danger/10 border-b border-accent-danger/30 flex items-center justify-between">
+                    {visibleError}
+                    <button onClick={() => setErrorDismissed(visibleError)} className="underline ml-2">Dismiss</button>
+                  </div>
+                )}
+                <ChatPanel
+                  messages={messages}
+                  onSend={handleSend}
+                  disabled={isDone}
+                  isWorking={!isDone && messages.length > 0 && messages[messages.length - 1].role === 'user'}
+                />
+              </>
             )}
             {activeTab === 'files' && (
               <FileTree files={files} />
