@@ -11,6 +11,10 @@ COST_TABLE = {
     "gpt-4o-mini": {"input": 0.000150, "output": 0.000600},
     "gpt-4-turbo": {"input": 0.010, "output": 0.030},
     "gpt-3.5-turbo": {"input": 0.0005, "output": 0.0015},
+    "gpt-5": {"input": 0.00125, "output": 0.010},
+    "gpt-5-2025-08-07": {"input": 0.00125, "output": 0.010},
+    "gpt-5.6": {"input": 0.005, "output": 0.030},
+    "gpt-5.6-sol": {"input": 0.005, "output": 0.030},
 }
 
 def compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
