@@ -16,7 +16,7 @@ Score the submission on 5 dimensions, each 0-20 points:
 2. functional_correctness: Does the code look like it would run correctly? Are there obvious bugs?
 3. code_quality: Is the code clean, readable, properly structured?
 4. product_taste: Does the result feel like a real product? Good UX decisions, sensible defaults?
-5. prompting_skill: Did the user give clear, effective prompts? Did they iterate well?
+5. prompting_skill: How precisely and effectively did the user direct the agent? Score harshly on vagueness, missing constraints, and failure to course-correct. A PRD dump or a single high-level message should score 8-12 at most — good prompting means specifying edge cases, error states, data boundaries, and iterating when the agent drifts. Generic instructions like "build a login page" with no detail about auth mechanism, session handling, or failure UX are weak. Deduct heavily for: no validation instructions, no error handling guidance, no mention of edge cases, relying entirely on the agent's judgment for product decisions the user should own.
 
 Respond ONLY with valid JSON matching this exact schema:
 {
