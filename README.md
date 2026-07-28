@@ -28,9 +28,9 @@ Each category is scored 0-20 by the judge model. Sum is the overall score out of
 | Functional correctness | Does it run? Does it work? Judged from execution logs and screenshots, not just code. |
 | Code quality | Structure, readability, appropriate complexity for a 1-hour build. |
 | Product taste | Does this feel like something a good engineer would be proud of, or minimum viable output? |
-| Prompting skill | Process score. Clear instructions, good course-correction, no over- or under-specifying. |
+| Prompting skill | Quality of direction: specificity, edge case coverage, error state handling, and course-correction when the agent drifts. A vague PRD or single high-level message scores 8-12 at most. |
 
-Token cost is reported separately as a raw number and a percentile across your past sessions.
+Token cost is reported separately as a raw number and a percentile across your past sessions (lower cost = higher percentile).
 
 ---
 
