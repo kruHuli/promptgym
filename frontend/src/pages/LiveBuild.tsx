@@ -16,6 +16,7 @@ export default function LiveBuild() {
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'logs'>('chat')
   const [errorDismissed, setErrorDismissed] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<string | null>(null)
 
   const { messages, files, sandboxStdout, timerRemaining, sessionStatus, wsStatus, errorMsg } = useSessionWS(sessionId)
   const visibleError = errorMsg && errorMsg !== errorDismissed ? errorMsg : null
@@ -157,26 +158,39 @@ export default function LiveBuild() {
           <div className="flex-1 flex overflow-hidden">
             {/* File tree panel */}
             <div className="w-64 shrink-0 border-r border-bg-border overflow-hidden">
-              <FileTree files={files} />
+              <FileTree files={files} selected={selectedFile} onSelect={setSelectedFile} />
             </div>
 
-            {/* Preview / placeholder */}
-            <div className="flex-1 flex flex-col items-center justify-center bg-bg-base text-text-muted">
-              <div className="text-center space-y-3">
-                <div className="text-4xl opacity-30">⬜</div>
-                <div className="text-sm">Sandbox Preview</div>
-                <div className="text-xs font-mono">
-                  {Object.keys(files).length} files · {sandboxStdout.length} log entries
-                </div>
-                {Object.keys(files).length > 0 && (
-                  <div className="mt-4 text-xs text-text-muted font-mono space-y-1">
-                    {Object.keys(files).slice(0, 8).map((f) => (
-                      <div key={f} className="text-accent-success">✓ {f}</div>
-                    ))}
-                    {Object.keys(files).length > 8 && (
-                      <div className="text-text-muted">+{Object.keys(files).length - 8} more</div>
-                    )}
-                  </div>
+            {/* Output / file content panel */}
+            <div className="flex-1 flex flex-col overflow-hidden bg-bg-base">
+              <div className="px-3 py-2 border-b border-bg-border shrink-0 flex items-center gap-3">
+                <span
+                  className={`text-xs font-mono uppercase cursor-pointer transition-colors ${!selectedFile ? 'text-accent-primary' : 'text-text-muted hover:text-text-secondary'}`}
+                  onClick={() => setSelectedFile(null)}
+                >
+                  Output
+                </span>
+                {selectedFile && (
+                  <>
+                    <span className="text-text-muted text-xs">/</span>
+                    <span className="text-xs font-mono text-accent-primary truncate">{selectedFile}</span>
+                    <button onClick={() => setSelectedFile(null)} className="ml-auto text-text-muted hover:text-text-secondary text-xs">✕</button>
+                  </>
+                )}
+              </div>
+              <div className="flex-1 overflow-auto p-3">
+                {selectedFile && files[selectedFile] ? (
+                  <pre className="text-xs font-mono text-text-primary whitespace-pre leading-relaxed">
+                    {files[selectedFile]}
+                  </pre>
+                ) : sandboxStdout.length === 0 ? (
+                  <div className="text-text-muted text-xs font-mono">No output yet</div>
+                ) : (
+                  sandboxStdout.map((line, i) => (
+                    <pre key={i} className="text-xs font-mono text-accent-success mb-2 whitespace-pre-wrap leading-relaxed">
+                      {line}
+                    </pre>
+                  ))
                 )}
               </div>
             </div>
