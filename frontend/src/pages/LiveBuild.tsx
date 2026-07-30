@@ -52,6 +52,8 @@ export default function LiveBuild() {
     if (!confirm('Submit your session for grading?')) return
     setSubmitting(true)
     await api.submitSession(sessionId)
+    // Results page polls for the score, so go there immediately instead of waiting for grading
+    navigate(`/sessions/${sessionId}/results`)
   }
 
   const isDone = sessionStatus === 'submitted' || sessionStatus === 'graded'
