@@ -201,11 +201,12 @@ export default function LiveBuild() {
           {/* Content */}
           <div className="flex-1 overflow-auto min-h-0">
             {rightTab === 'preview' ? (
+              // allow-same-origin: sandbox apps need localStorage; preview origin (:8000) ≠ app origin (:5173), so the parent stays isolated
               <iframe
                 key={previewNonce}
                 src={previewUrl}
                 title="app preview"
-                sandbox="allow-scripts allow-forms allow-modals"
+                sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
                 className="w-full h-full bg-white border-0"
               />
             ) : rightTab === 'output' ? (
