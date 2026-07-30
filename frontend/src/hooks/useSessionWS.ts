@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { api } from '../api/client'
 
 const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
   .replace(/^http/, 'ws')
@@ -73,6 +74,20 @@ export function useSessionWS(sessionId: number | null) {
   }, [sessionId])
 
   useEffect(() => {
+    // Seed history so the transcript survives page reloads; WS only streams new events
+    if (sessionId) {
+      api.getMessages(sessionId).then((history) => {
+        const seeded: WSMessage[] = history.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          tokens: { input: m.input_tokens ?? 0, output: m.output_tokens ?? 0 },
+          cost_usd: m.cost_usd,
+        }))
+        // keep any WS messages that raced in before the fetch resolved
+        setMessages((prev) => [...seeded, ...prev.filter((p) => !seeded.some((s) => s.id === p.id))])
+      })
+    }
     connect()
     return () => {
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current)

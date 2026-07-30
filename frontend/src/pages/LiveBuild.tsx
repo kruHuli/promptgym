@@ -57,6 +57,16 @@ export default function LiveBuild() {
   const isDone = sessionStatus === 'submitted' || sessionStatus === 'graded'
   const isWorking = !isDone && messages.length > 0 && messages[messages.length - 1].role === 'user'
 
+  // ponytail: transcript as a virtual file derived from messages — no backend storage
+  const allFiles = messages.length
+    ? {
+        ...files,
+        'transcript.md': messages
+          .map((m) => `**${m.role}:**\n\n${m.content}`)
+          .join('\n\n---\n\n'),
+      }
+    : files
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-bg-base">
       {/* Arena header */}
@@ -133,7 +143,7 @@ export default function LiveBuild() {
 
         {/* Column 2: File tree */}
         <div className="w-48 flex-shrink-0 flex flex-col border-r border-bg-border min-h-0">
-          <FileTree files={files} selected={selectedFile} onSelect={setSelectedFile} />
+          <FileTree files={allFiles} selected={selectedFile} onSelect={setSelectedFile} />
         </div>
 
         {/* Column 3: Output / Logs */}
@@ -203,13 +213,13 @@ export default function LiveBuild() {
                 className="w-full h-full bg-white border-0"
               />
             ) : rightTab === 'output' ? (
-              selectedFile && files[selectedFile] ? (
+              selectedFile && allFiles[selectedFile] ? (
                 <>
                   <div className="text-xs font-mono text-text-muted px-3 py-1.5 border-b border-bg-border bg-bg-elevated sticky top-0">
                     {selectedFile}
                   </div>
                   <pre className="text-xs font-mono text-text-primary p-4 whitespace-pre overflow-x-auto leading-relaxed">
-                    {files[selectedFile]}
+                    {allFiles[selectedFile]}
                   </pre>
                 </>
               ) : (
