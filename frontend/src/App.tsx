@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import Lobby from './pages/Lobby'
 import ChallengeBrief from './pages/ChallengeBrief'
 import LiveBuild from './pages/LiveBuild'
@@ -28,40 +28,56 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `text-sm font-mono transition-colors px-1 pb-0.5 ${
+    isActive
+      ? 'text-accent-primary border-b border-accent-primary'
+      : 'text-text-muted hover:text-text-secondary'
+  }`
+
+function AppShell() {
+  const location = useLocation()
+  // Hide global nav inside the arena (LiveBuild has its own header)
+  const isArena = /^\/sessions\/\d+$/.test(location.pathname)
+
+  return (
+    <div className="min-h-screen bg-bg-base">
+      {!isArena && (
+        <nav className="border-b border-bg-border bg-bg-surface/80 backdrop-blur-sm px-6 h-12 flex items-center gap-6 sticky top-0 z-50">
+          <NavLink to="/" className="flex items-center gap-0 font-mono font-bold text-base tracking-widest select-none">
+            <span className="text-accent-primary text-glow-purple">PROMPT</span>
+            <span className="text-accent-cyan text-glow-cyan">_GYM</span>
+          </NavLink>
+          <div className="h-4 w-px bg-bg-border" />
+          <div className="flex items-center gap-5">
+            <NavLink to="/" end className={navLinkClass}>challenges</NavLink>
+            <NavLink to="/dashboard" className={navLinkClass}>dashboard</NavLink>
+          </div>
+        </nav>
+      )}
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Lobby />} />
+          <Route path="/challenges/:id" element={<ChallengeBrief />} />
+          <Route path="/sessions/:id" element={<LiveBuild />} />
+          <Route path="/sessions/:id/results" element={<Results />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={
+            <div className="text-text-muted text-center py-20">
+              404 — Page not found.{' '}
+              <NavLink to="/" className="text-accent-primary hover:underline">Go home</NavLink>
+            </div>
+          } />
+        </Routes>
+      </ErrorBoundary>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-bg-base">
-        <nav className="border-b border-bg-border bg-bg-surface px-6 py-3 flex items-center gap-6">
-          <Link to="/" className="text-accent-primary font-bold text-lg tracking-tight">
-            PromptGym
-          </Link>
-          <span className="text-text-muted text-sm">AI Coding Practice</span>
-          <div className="ml-auto flex gap-4">
-            <Link to="/" className="text-text-secondary hover:text-text-primary text-sm transition-colors">
-              Challenges
-            </Link>
-            <Link to="/dashboard" className="text-text-secondary hover:text-text-primary text-sm transition-colors">
-              Dashboard
-            </Link>
-          </div>
-        </nav>
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Lobby />} />
-            <Route path="/challenges/:id" element={<ChallengeBrief />} />
-            <Route path="/sessions/:id" element={<LiveBuild />} />
-            <Route path="/sessions/:id/results" element={<Results />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={
-              <div className="text-text-muted text-center py-20">
-                404 — Page not found.{' '}
-                <Link to="/" className="text-accent-primary hover:underline">Go home</Link>
-              </div>
-            } />
-          </Routes>
-        </ErrorBoundary>
-      </div>
+      <AppShell />
     </BrowserRouter>
   )
 }

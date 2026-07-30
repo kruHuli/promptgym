@@ -1,3 +1,5 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,31 +11,102 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   ::-webkit-scrollbar-track {
     @apply bg-bg-base;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-bg-border rounded;
+    background: #2D1F5E;
+    border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-text-muted;
+    background: #A855F7;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-accent-primary text-bg-base font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply relative font-semibold px-4 py-2 rounded-md transition-all disabled:opacity-40 disabled:cursor-not-allowed;
+    background: #A855F7;
+    color: #fff;
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.4);
   }
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.9;
+    box-shadow: 0 0 32px rgba(168, 85, 247, 0.6);
+  }
+
   .btn-ghost {
-    @apply border border-bg-border text-text-secondary px-4 py-2 rounded-md hover:border-text-muted hover:text-text-primary transition-colors;
+    @apply border border-bg-border text-text-secondary px-4 py-2 rounded-md transition-all;
   }
+  .btn-ghost:hover {
+    border-color: #A855F7;
+    color: #A855F7;
+  }
+
   .card {
     @apply bg-bg-surface border border-bg-border rounded-lg p-4;
   }
+
   .input {
-    @apply bg-bg-elevated border border-bg-border rounded-md px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent-primary transition-colors w-full;
+    @apply bg-bg-elevated border border-bg-border rounded-md px-3 py-2 text-text-primary placeholder-text-muted focus:outline-none transition-colors w-full;
   }
+  .input:focus {
+    border-color: #A855F7;
+  }
+
+  /* Gradient border card — dark purple border by default, purple→cyan gradient on hover */
+  .card-gradient {
+    position: relative;
+    background: #0D0A1A;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    isolation: isolate;
+    transition: box-shadow 0.25s;
+  }
+  .card-gradient::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: calc(0.5rem + 1px);
+    background: linear-gradient(135deg, #2D1F5E, #1A2D3D);
+    z-index: -1;
+    transition: background 0.25s;
+  }
+  .card-gradient:hover::before {
+    background: linear-gradient(135deg, #A855F7, #06B6D4);
+  }
+  .card-gradient:hover {
+    box-shadow: 0 0 28px rgba(168, 85, 247, 0.18);
+  }
+
+  /* Tag variants */
+  .tag {
+    @apply text-xs px-2 py-0.5 rounded font-mono inline-flex items-center;
+  }
+  .tag-purple {
+    @apply tag;
+    background: rgba(168, 85, 247, 0.12);
+    color: #A855F7;
+    border: 1px solid rgba(168, 85, 247, 0.28);
+  }
+  .tag-cyan {
+    @apply tag;
+    background: rgba(6, 182, 212, 0.12);
+    color: #06B6D4;
+    border: 1px solid rgba(6, 182, 212, 0.28);
+  }
+  .tag-score {
+    @apply tag;
+    background: rgba(249, 115, 22, 0.12);
+    color: #F97316;
+    border: 1px solid rgba(249, 115, 22, 0.28);
+  }
+
+  /* Text glows */
+  .text-glow-purple { text-shadow: 0 0 22px rgba(168, 85, 247, 0.65); }
+  .text-glow-cyan   { text-shadow: 0 0 22px rgba(6, 182, 212, 0.65); }
+  .text-glow-orange { text-shadow: 0 0 22px rgba(249, 115, 22, 0.65); }
 }

@@ -12,13 +12,13 @@ export function TokenCounter({ messages }: TokenCounterProps) {
   return (
     <div className="flex items-center gap-3 text-xs font-mono">
       <span className="text-text-muted">
-        in: <span className="text-text-secondary">{totalInput.toLocaleString()}</span>
+        in:<span className="text-text-secondary ml-1">{totalInput.toLocaleString()}</span>
       </span>
       <span className="text-text-muted">
-        out: <span className="text-text-secondary">{totalOutput.toLocaleString()}</span>
+        out:<span className="text-text-secondary ml-1">{totalOutput.toLocaleString()}</span>
       </span>
       <span className="text-text-muted">
-        cost: <span className="text-accent-warning">${totalCost.toFixed(4)}</span>
+        $<span className="text-accent-score ml-0.5">{totalCost.toFixed(4)}</span>
       </span>
     </div>
   )

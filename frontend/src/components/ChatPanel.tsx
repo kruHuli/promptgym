@@ -27,26 +27,30 @@ export function ChatPanel({ messages, onSend, disabled, isWorking }: ChatPanelPr
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
         {messages.length === 0 && (
-          <div className="text-text-muted text-sm text-center mt-8">
-            Start by describing what you want to build
+          <div className="text-text-muted text-xs text-center mt-10 font-mono">
+            start by describing what you want to build
           </div>
         )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className="text-xs text-text-muted capitalize">{msg.role}</div>
+            <div className="text-xs text-text-muted font-mono capitalize">{msg.role}</div>
             <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap font-mono leading-relaxed ${
+              className={`max-w-[88%] rounded-lg px-3 py-2 text-xs whitespace-pre-wrap font-mono leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-accent-primary text-bg-base'
+                  ? 'text-white'
                   : msg.role === 'system'
                   ? 'bg-bg-elevated text-text-muted border border-bg-border'
                   : 'bg-bg-elevated text-text-primary border border-bg-border'
               }`}
+              style={msg.role === 'user' ? {
+                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                boxShadow: '0 0 14px rgba(168, 85, 247, 0.25)',
+              } : undefined}
             >
               {msg.content}
             </div>
             {msg.cost_usd ? (
-              <div className="text-xs text-text-muted font-mono">
+              <div className="text-xs text-text-muted font-mono opacity-60">
                 ${msg.cost_usd.toFixed(4)} · {msg.tokens?.input}in/{msg.tokens?.output}out
               </div>
             ) : null}
@@ -54,10 +58,10 @@ export function ChatPanel({ messages, onSend, disabled, isWorking }: ChatPanelPr
         ))}
         {isWorking && (
           <div className="flex flex-col gap-1 items-start">
-            <div className="text-xs text-text-muted">agent</div>
-            <div className="bg-bg-elevated border border-bg-border rounded-lg px-3 py-2 text-sm font-mono text-text-muted flex items-center gap-1">
-              <span className="animate-pulse">working</span>
-              <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+            <div className="text-xs text-text-muted font-mono">agent</div>
+            <div className="bg-bg-elevated border border-bg-border rounded-lg px-3 py-2 text-xs font-mono text-accent-cyan flex items-center gap-0.5">
+              <span>working</span>
+              <span className="animate-bounce ml-1" style={{ animationDelay: '0ms' }}>.</span>
               <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
               <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
             </div>
@@ -66,12 +70,12 @@ export function ChatPanel({ messages, onSend, disabled, isWorking }: ChatPanelPr
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-bg-border p-3">
+      <div className="border-t border-bg-border p-3 shrink-0">
         <div className="flex gap-2">
           <textarea
-            className="input resize-none text-sm font-mono"
+            className="input resize-none text-xs font-mono"
             rows={3}
-            placeholder={disabled ? 'Session ended' : 'Tell the agent what to build...'}
+            placeholder={disabled ? 'session ended' : 'tell the agent what to build…'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={disabled}
@@ -83,14 +87,14 @@ export function ChatPanel({ messages, onSend, disabled, isWorking }: ChatPanelPr
             }}
           />
           <button
-            className="btn-primary self-end px-3 py-2 text-sm"
+            className="btn-primary self-end px-3 py-2 text-xs"
             onClick={handleSend}
             disabled={disabled || !input.trim()}
           >
-            Send
+            send
           </button>
         </div>
-        <div className="text-xs text-text-muted mt-1">Enter to send · Shift+Enter for newline</div>
+        <div className="text-xs text-text-muted mt-1.5 font-mono opacity-50">↵ send · shift+↵ newline</div>
       </div>
     </div>
   )

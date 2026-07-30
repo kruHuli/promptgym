@@ -28,17 +28,25 @@ export default function Dashboard() {
     title: h.challenge_title.slice(0, 20),
   }))
 
+  const tooltipStyle = {
+    background: '#0D0A1A',
+    border: '1px solid #2D1F5E',
+    borderRadius: 6,
+    fontFamily: 'Geist Mono Variable, monospace',
+    fontSize: 11,
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-10">
-      <h1 className="text-2xl font-bold text-text-primary mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-text-primary tracking-tight mb-10">Dashboard</h1>
 
       {loading ? (
-        <div className="text-text-muted text-center py-20">Loading...</div>
+        <div className="text-text-muted text-center py-20 font-mono text-sm">loading...</div>
       ) : history.length === 0 ? (
-        <div className="text-text-muted text-center py-20">
-          No sessions yet.{' '}
-          <button className="text-accent-primary hover:underline" onClick={() => navigate('/')}>
-            Start a challenge
+        <div className="text-center py-20">
+          <div className="text-text-muted text-sm font-mono mb-4">no sessions yet</div>
+          <button className="btn-primary text-sm" onClick={() => navigate('/')}>
+            start a challenge →
           </button>
         </div>
       ) : (
@@ -46,47 +54,47 @@ export default function Dashboard() {
           {graded.length >= 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="card">
-                <div className="text-xs font-mono text-text-muted mb-4">SCORE OVER TIME</div>
+                <div className="text-xs font-mono text-text-muted tracking-widest mb-4">SCORE OVER TIME</div>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                    <XAxis dataKey="n" tick={{ fill: '#8b949e', fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: '#8b949e', fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2D1F5E" />
+                    <XAxis dataKey="n" tick={{ fill: '#4A3F6B', fontSize: 11 }} />
+                    <YAxis domain={[0, 100]} tick={{ fill: '#4A3F6B', fontSize: 11 }} />
                     <Tooltip
-                      contentStyle={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 6 }}
-                      labelStyle={{ color: '#8b949e' }}
-                      itemStyle={{ color: '#58a6ff' }}
+                      contentStyle={tooltipStyle}
+                      labelStyle={{ color: '#4A3F6B' }}
+                      itemStyle={{ color: '#A855F7' }}
                     />
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#58a6ff"
+                      stroke="#A855F7"
                       strokeWidth={2}
-                      dot={{ fill: '#58a6ff', r: 3 }}
+                      dot={{ fill: '#A855F7', r: 3 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               <div className="card">
-                <div className="text-xs font-mono text-text-muted mb-4">COST OVER TIME (USD)</div>
+                <div className="text-xs font-mono text-text-muted tracking-widest mb-4">COST OVER TIME (USD)</div>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                    <XAxis dataKey="n" tick={{ fill: '#8b949e', fontSize: 11 }} />
-                    <YAxis tick={{ fill: '#8b949e', fontSize: 11 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2D1F5E" />
+                    <XAxis dataKey="n" tick={{ fill: '#4A3F6B', fontSize: 11 }} />
+                    <YAxis tick={{ fill: '#4A3F6B', fontSize: 11 }} />
                     <Tooltip
-                      contentStyle={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 6 }}
-                      labelStyle={{ color: '#8b949e' }}
-                      itemStyle={{ color: '#d29922' }}
+                      contentStyle={tooltipStyle}
+                      labelStyle={{ color: '#4A3F6B' }}
+                      itemStyle={{ color: '#F97316' }}
                       formatter={(v: number) => [`$${v}`, 'cost']}
                     />
                     <Line
                       type="monotone"
                       dataKey="cost"
-                      stroke="#d29922"
+                      stroke="#F97316"
                       strokeWidth={2}
-                      dot={{ fill: '#d29922', r: 3 }}
+                      dot={{ fill: '#F97316', r: 3 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -95,15 +103,15 @@ export default function Dashboard() {
           )}
 
           <div className="card">
-            <div className="text-xs font-mono text-text-muted mb-4">SESSION HISTORY</div>
+            <div className="text-xs font-mono text-text-muted tracking-widest mb-5">SESSION HISTORY</div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-text-muted text-xs border-b border-bg-border">
-                  <th className="pb-2 font-mono">Challenge</th>
-                  <th className="pb-2 font-mono">Date</th>
-                  <th className="pb-2 font-mono text-right">Score</th>
-                  <th className="pb-2 font-mono text-right">Cost</th>
-                  <th className="pb-2 font-mono text-right">Status</th>
+                  <th className="pb-3 font-mono">Challenge</th>
+                  <th className="pb-3 font-mono">Date</th>
+                  <th className="pb-3 font-mono text-right">Score</th>
+                  <th className="pb-3 font-mono text-right">Cost</th>
+                  <th className="pb-3 font-mono text-right">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,13 +126,13 @@ export default function Dashboard() {
                     }
                   >
                     <td className="py-3 text-text-primary">{h.challenge_title}</td>
-                    <td className="py-3 text-text-secondary font-mono text-xs">
+                    <td className="py-3 text-text-muted font-mono text-xs">
                       {new Date(h.started_at).toLocaleDateString()}
                     </td>
                     <td className="py-3 text-right font-mono font-bold">
                       {h.overall_score !== null ? (
                         <span className={
-                          h.overall_score >= 80 ? 'text-accent-success' :
+                          h.overall_score >= 80 ? 'text-accent-score' :
                           h.overall_score >= 60 ? 'text-accent-warning' : 'text-accent-danger'
                         }>
                           {Math.round(h.overall_score)}
@@ -137,11 +145,11 @@ export default function Dashboard() {
                       {h.token_cost_total !== null ? `$${h.token_cost_total.toFixed(4)}` : '—'}
                     </td>
                     <td className="py-3 text-right">
-                      <span className={`text-xs px-2 py-0.5 rounded font-mono ${
-                        h.status === 'graded' ? 'bg-accent-success/20 text-accent-success' :
-                        h.status === 'active' ? 'bg-accent-primary/20 text-accent-primary' :
-                        h.status === 'submitted' ? 'bg-accent-warning/20 text-accent-warning' :
-                        'bg-bg-elevated text-text-muted'
+                      <span className={`tag font-mono ${
+                        h.status === 'graded' ? 'tag-cyan' :
+                        h.status === 'active' ? 'tag-purple' :
+                        h.status === 'submitted' ? 'tag-score' :
+                        'text-text-muted text-xs'
                       }`}>
                         {h.status}
                       </span>

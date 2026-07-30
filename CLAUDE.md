@@ -47,7 +47,10 @@ Single-user FastAPI backend + React frontend. Backend owns all LLM calls -- fron
 | `backend/services/judge_service.py` | Grading payload + judge LLM call + score persistence |
 | `backend/api/sessions.py` | WebSocket broadcaster, session lifecycle endpoints |
 | `frontend/src/hooks/useSessionWS.ts` | All live state comes from this hook |
-| `frontend/src/pages/LiveBuild.tsx` | Core screen -- chat, file tree, logs, timer |
+| `frontend/src/pages/LiveBuild.tsx` | Core arena screen -- three-column IDE layout (chat / file tree / output+logs) |
+| `frontend/src/App.tsx` | Router + nav shell -- nav hidden on `/sessions/:id` (arena is full-screen) |
+| `frontend/tailwind.config.js` | Design tokens -- all colors and fonts live here |
+| `frontend/src/index.css` | Global styles -- component classes (`.card`, `.btn-primary`, `.card-gradient`, tags) |
 
 ## Environment variables
 
@@ -101,6 +104,30 @@ Judge LLM returns strict JSON. Five scores (0-20 each), sum = overall out of 100
 
 Token cost is computed deterministically by the backend (not the LLM) and stored as `token_cost_total` and `token_cost_percentile` (via scipy, across all sessions in the table -- not filtered by user, correct for multi-user later).
 
+## Frontend design system
+
+**Palette** (`frontend/tailwind.config.js`):
+- `bg-base` `#06050E` · `bg-surface` `#0D0A1A` · `bg-elevated` `#150F2A` · `bg-border` `#2D1F5E`
+- `accent-primary` `#A855F7` (purple) · `accent-cyan` `#06B6D4` · `accent-score` `#F97316` (orange, used for grades/achievements)
+- `accent-success` `#22C55E` · `accent-warning` `#F59E0B` · `accent-danger` `#EF4444`
+- Text: `text-primary` `#F1F0F5` · `text-secondary` `#9D8FC7` · `text-muted` `#4A3F6B`
+
+**Fonts**: Geist Variable (sans) + Geist Mono Variable (mono) via `@fontsource-variable/geist` and `@fontsource-variable/geist-mono`.
+
+**Component classes** (defined in `index.css`):
+- `.card` -- surface card with border
+- `.card-gradient` -- dark purple border by default, animates to purple→cyan gradient on hover (uses `::before` + `isolation: isolate`)
+- `.btn-primary` -- purple button with glow shadow
+- `.btn-ghost` -- ghost button, turns purple on hover
+- `.tag-purple` / `.tag-cyan` / `.tag-score` -- neon badge tags
+- `.text-glow-purple` / `.text-glow-cyan` / `.text-glow-orange` -- text shadow glows
+
+**LiveBuild layout**: three fixed columns -- chat (320px) | file tree (192px) | output+logs (flex). No tab switching for the left panel; right panel has OUTPUT/LOGS mini-tabs.
+
+**Results animation**: score counter animates 0→actual over ~1.1s, then grade letter pops in with spring keyframe (`animate-grade-pop`). A/S grades use `accent-score` (orange) with glow.
+
+**Nav**: persistent top bar hidden on `/sessions/:id` (LiveBuild is full-screen with its own arena header).
+
 ## Conventions
 
 - No sync DB calls in async routes -- always `await db.execute(...)` etc.
@@ -108,3 +135,4 @@ Token cost is computed deterministically by the backend (not the LLM) and stored
 - Background tasks (`asyncio.create_task`) for agent turns and grading so endpoints return immediately.
 - `BUILDER_MODEL` and `JUDGE_MODEL` are always read from env -- never hardcode model strings.
 - The five score categories are the only LLM-produced numbers. Everything else (token counts, cost, elapsed time, turn count, percentile) is computed by the backend.
+- Never add new color hex values directly in component files -- always use Tailwind tokens from `tailwind.config.js`. Inline `style` props are only acceptable for dynamic values (e.g. animation widths, per-category glow colors in ScoreBreakdown).
