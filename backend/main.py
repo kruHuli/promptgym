@@ -1,21 +1,29 @@
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select
 import os
 
+import config
 from database import engine, AsyncSessionLocal
+from limiter import limiter
 from models import Base, User, Challenge
 from api.challenges import router as challenges_router
-from api.sessions import router as sessions_router
+from api.sessions import router as sessions_router, reap_expired_sandboxes
 from api.users import router as users_router
 from services.challenge_service import SEED_CHALLENGES
 
 app = FastAPI(title="PromptGym", version="1.0.0")
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,6 +52,18 @@ async def startup():
             for ch_data in SEED_CHALLENGES:
                 db.add(Challenge(**ch_data))
             await db.commit()
+
+    asyncio.create_task(_reaper_loop())
+
+
+async def _reaper_loop():
+    """Periodically destroy sandboxes for sessions past their deadline."""
+    while True:
+        await asyncio.sleep(60)
+        try:
+            await reap_expired_sandboxes()
+        except Exception as e:
+            print(f"reaper error: {e}", file=__import__("sys").stderr)
 
 
 @app.get("/health")

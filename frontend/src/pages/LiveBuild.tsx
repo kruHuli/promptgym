@@ -19,7 +19,10 @@ export default function LiveBuild() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [previewNonce, setPreviewNonce] = useState(0)
 
-  const previewUrl = sessionId ? `${API_BASE}/sessions/${sessionId}/preview/?v=${previewNonce}` : ''
+  // Serve preview from a distinct origin in prod (VITE_PREVIEW_URL) so the allow-same-origin
+  // iframe can't reach the parent app. Falls back to the API origin for local dev.
+  const PREVIEW_BASE = import.meta.env.VITE_PREVIEW_URL || API_BASE
+  const previewUrl = sessionId ? `${PREVIEW_BASE}/sessions/${sessionId}/preview/?v=${previewNonce}` : ''
 
   const { messages, files, sandboxStdout, timerRemaining, sessionStatus, wsStatus, errorMsg } = useSessionWS(sessionId)
   const visibleError = errorMsg && errorMsg !== errorDismissed ? errorMsg : null

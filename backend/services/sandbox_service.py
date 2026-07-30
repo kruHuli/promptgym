@@ -5,6 +5,8 @@ import subprocess
 import uuid
 from typing import Any
 
+import config
+
 _MNGR_STATUS = re.compile(r"\nCommand (?:succeeded|failed) on agent \S+$")
 
 WORKDIR = "/work"
@@ -41,12 +43,17 @@ class SandboxService:
     def create_sandbox() -> str:
         _ensure_template()
         name = f"pg-{uuid.uuid4().hex[:8]}"
+        # Provider-specific resource/network caps (e.g. cpu=1 mem=512m), opt-in via SANDBOX_BUILD_ARGS
+        build_args: list[str] = []
+        for arg in config.SANDBOX_BUILD_ARGS:
+            build_args += ["-b", arg]
         # 'command' type runs a shell process in tmux; sleep keeps it alive without starting an AI agent
         rc, out, err = _run(
             "create", name,
             "--from", _TEMPLATE,
             "--provider", "docker",
             "--type", "command",
+            *build_args,
             "--no-connect",
             "--", "bash", "-c", "while true; do sleep 3600; done",
             timeout=120,

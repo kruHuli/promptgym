@@ -59,9 +59,18 @@ Single-user FastAPI backend + React frontend. Backend owns all LLM calls -- fron
 | `OPENAI_API_KEY` | (required) | |
 | `BUILDER_MODEL` | `gpt-4o` | Model for the coding agent |
 | `JUDGE_MODEL` | `gpt-4o` | Model for grading |
-| `DATABASE_URL` | `sqlite+aiosqlite:///./promptgym.db` | Swap to Postgres URL for prod |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./promptgym.db` | Swap to Postgres URL for prod (e.g. `postgresql+asyncpg://...`) |
+| `ALLOWED_ORIGINS` | `*` | Comma-separated CORS origins. Lock to your domain in prod. |
+| `DAILY_SPEND_CAP_USD` | `0` | Global OpenAI spend ceiling per UTC day; `/message` + session create return 429 once crossed. `0` = no cap. |
+| `RATE_LIMIT_MESSAGES` | (unset) | Per-IP slowapi limit on `/message`, e.g. `20/minute`. |
+| `RATE_LIMIT_SESSIONS` | (unset) | Per-IP slowapi limit on session create, e.g. `5/minute`. |
+| `SANDBOX_GRACE_MINUTES` | `5` | Grace past a challenge's time limit before the reaper destroys the sandbox. |
+| `SANDBOX_BUILD_ARGS` | (unset) | Space-separated mngr `-b` build-args for sandbox resource/network caps, e.g. `cpu=1 mem=512m`. Keys are provider-specific (`mngr help create`). |
+| `VITE_PREVIEW_URL` (frontend) | falls back to API origin | Serve the preview iframe from a distinct origin in prod so `allow-same-origin` can't reach the parent app. |
 
 Token cost rates live in `backend/config.py` in `COST_TABLE` -- update there when model pricing changes.
+
+**Public-launch guards** (all opt-in, default to old local behavior): daily spend cap + per-IP rate limits protect the OpenAI bill; a 60s reaper loop (`reap_expired_sandboxes` in `api/sessions.py`, scheduled in `main.py`) destroys sandboxes for sessions past their deadline so abandoned containers don't pile up; `ALLOWED_ORIGINS` locks CORS; `VITE_PREVIEW_URL` isolates the preview iframe origin.
 
 ## Database
 

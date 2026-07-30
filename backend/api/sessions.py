@@ -1,20 +1,26 @@
 import asyncio
 import json
 import mimetypes
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from pydantic import BaseModel
 
+import config
 from database import get_db, AsyncSessionLocal
+from limiter import limiter
 from models import Session, Submission, Score, Message
 from services.sandbox_service import SandboxService
 from services.agent_service import run_agent_turn, get_queues
 from services.judge_service import grade_submission
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
+
+# slowapi needs a static limit string; unset env falls back to an effectively-unlimited rate.
+_MSG_LIMIT = config.RATE_LIMIT_MESSAGES or "1000000/minute"
+_SESSION_LIMIT = config.RATE_LIMIT_SESSIONS or "1000000/minute"
 
 # {session_id: [Queue, ...]}  — module-level broadcaster
 session_queues = get_queues()
@@ -61,7 +67,9 @@ class ScoreOut(BaseModel):
 
 
 @router.post("", response_model=SessionOut)
-async def create_session(body: SessionCreate, db: AsyncSession = Depends(get_db)):
+@limiter.limit(_SESSION_LIMIT)
+async def create_session(request: Request, body: SessionCreate, db: AsyncSession = Depends(get_db)):
+    await _enforce_daily_cap(db)
     sandbox_id = SandboxService.create_sandbox()
     sess = Session(
         user_id=body.user_id,
@@ -85,7 +93,9 @@ async def get_session(session_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{session_id}/message")
+@limiter.limit(_MSG_LIMIT)
 async def send_message(
+    request: Request,
     session_id: int,
     body: MessageIn,
     background_tasks: BackgroundTasks,
@@ -95,8 +105,37 @@ async def send_message(
     if not sess or sess.status != "active":
         raise HTTPException(400, "Session not active")
 
+    await _enforce_daily_cap(db)
     background_tasks.add_task(_run_agent_bg, session_id, body.content, sess.sandbox_id)
     return {"status": "queued"}
+
+
+async def _enforce_daily_cap(db: AsyncSession) -> None:
+    """Refuse new LLM work once today's total OpenAI spend crosses the cap."""
+    if config.DAILY_SPEND_CAP_USD <= 0:
+        return
+    since = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    spent = await db.scalar(
+        select(func.coalesce(func.sum(Message.cost_usd), 0.0)).where(Message.created_at >= since)
+    )
+    if spent and spent >= config.DAILY_SPEND_CAP_USD:
+        raise HTTPException(429, "Daily usage limit reached — try again tomorrow.")
+
+
+async def reap_expired_sandboxes() -> None:
+    """Destroy sandboxes for sessions past their deadline so abandoned containers don't pile up."""
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Session).where(Session.status == "active", Session.sandbox_id.isnot(None))
+        )
+        for sess in result.scalars().all():
+            await db.refresh(sess, ["challenge"])
+            limit = sess.challenge.time_limit_minutes + config.SANDBOX_GRACE_MINUTES
+            if datetime.utcnow() - sess.started_at > timedelta(minutes=limit):
+                SandboxService.destroy_sandbox(sess.sandbox_id)
+                sess.sandbox_id = None
+                sess.status = "abandoned"
+        await db.commit()
 
 
 async def _run_agent_bg(session_id: int, content: str, sandbox_id: str):
