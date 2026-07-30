@@ -84,6 +84,12 @@ export default function LiveBuild() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          <button
+            className="btn-ghost text-xs px-4 py-1.5"
+            onClick={() => { setRightTab('preview'); setPreviewNonce((n) => n + 1) }}
+          >
+            preview
+          </button>
           {sessionStatus === 'active' && (
             <button
               className="btn-primary text-xs px-4 py-1.5"
