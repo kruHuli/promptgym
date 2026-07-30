@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { api, Challenge } from '../api/client'
+import { api, API_BASE, Challenge } from '../api/client'
 import { useSessionWS } from '../hooks/useSessionWS'
 import { Timer } from '../components/Timer'
 import { TokenCounter } from '../components/TokenCounter'
@@ -14,9 +14,12 @@ export default function LiveBuild() {
 
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [rightTab, setRightTab] = useState<'output' | 'logs'>('output')
+  const [rightTab, setRightTab] = useState<'output' | 'preview' | 'logs'>('output')
   const [errorDismissed, setErrorDismissed] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
+  const [previewNonce, setPreviewNonce] = useState(0)
+
+  const previewUrl = sessionId ? `${API_BASE}/sessions/${sessionId}/preview/?v=${previewNonce}` : ''
 
   const { messages, files, sandboxStdout, timerRemaining, sessionStatus, wsStatus, errorMsg } = useSessionWS(sessionId)
   const visibleError = errorMsg && errorMsg !== errorDismissed ? errorMsg : null
@@ -142,6 +145,16 @@ export default function LiveBuild() {
               OUTPUT
             </button>
             <button
+              onClick={() => { setRightTab('preview'); setPreviewNonce((n) => n + 1) }}
+              className={`text-xs font-mono px-2 py-0.5 rounded transition-colors tracking-widest ${
+                rightTab === 'preview'
+                  ? 'text-accent-success bg-accent-success/10'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              PREVIEW
+            </button>
+            <button
               onClick={() => setRightTab('logs')}
               className={`text-xs font-mono px-2 py-0.5 rounded transition-colors tracking-widest ${
                 rightTab === 'logs'
@@ -151,11 +164,39 @@ export default function LiveBuild() {
             >
               LOGS{sandboxStdout.length > 0 ? ' ●' : ''}
             </button>
+            {rightTab === 'preview' && (
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => setPreviewNonce((n) => n + 1)}
+                  className="text-xs font-mono text-text-muted hover:text-text-secondary transition-colors"
+                  title="Reload preview"
+                >
+                  ↻ refresh
+                </button>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-mono text-text-muted hover:text-text-secondary transition-colors"
+                  title="Open in new tab"
+                >
+                  ↗ open
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Content */}
           <div className="flex-1 overflow-auto min-h-0">
-            {rightTab === 'output' ? (
+            {rightTab === 'preview' ? (
+              <iframe
+                key={previewNonce}
+                src={previewUrl}
+                title="app preview"
+                sandbox="allow-scripts allow-forms allow-modals"
+                className="w-full h-full bg-white border-0"
+              />
+            ) : rightTab === 'output' ? (
               selectedFile && files[selectedFile] ? (
                 <>
                   <div className="text-xs font-mono text-text-muted px-3 py-1.5 border-b border-bg-border bg-bg-elevated sticky top-0">

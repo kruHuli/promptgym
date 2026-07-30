@@ -122,7 +122,7 @@ Token cost is computed deterministically by the backend (not the LLM) and stored
 - `.tag-purple` / `.tag-cyan` / `.tag-score` -- neon badge tags
 - `.text-glow-purple` / `.text-glow-cyan` / `.text-glow-orange` -- text shadow glows
 
-**LiveBuild layout**: three fixed columns -- chat (320px) | file tree (192px) | output+logs (flex). No tab switching for the left panel; right panel has OUTPUT/LOGS mini-tabs.
+**LiveBuild layout**: three fixed columns -- chat (320px) | file tree (192px) | output+logs (flex). No tab switching for the left panel; right panel has OUTPUT/PREVIEW/LOGS mini-tabs. PREVIEW renders the sandbox app in a sandboxed iframe via `GET /sessions/{id}/preview/{path}` (serves the in-memory file mirror, defaults to index.html).
 
 **Results animation**: score counter animates 0→actual over ~1.1s, then grade letter pops in with spring keyframe (`animate-grade-pop`). A/S grades use `accent-score` (orange) with glow.
 

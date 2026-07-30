@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const BASE = API_BASE
 
 async function req<T>(path: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

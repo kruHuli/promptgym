@@ -1,7 +1,9 @@
 import asyncio
 import json
+import mimetypes
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -212,6 +214,31 @@ async def get_files(session_id: int, db: AsyncSession = Depends(get_db)):
     if not sess or not sess.sandbox_id:
         return {}
     return SandboxService.get_files(sess.sandbox_id)
+
+
+@router.get("/{session_id}/preview/{path:path}")
+async def preview_file(session_id: int, path: str, db: AsyncSession = Depends(get_db)):
+    sess = await db.get(Session, session_id)
+    if not sess or not sess.sandbox_id:
+        raise HTTPException(404, "Session not found or sandbox gone")
+    files = SandboxService.get_files(sess.sandbox_id)
+    if not path:
+        # ponytail: index.html at root, else first .html anywhere
+        path = "index.html" if "index.html" in files else next(
+            (p for p in sorted(files) if p.endswith(".html")), "index.html"
+        )
+    content = files.get(path) or files.get(path.lstrip("/"))
+    if content is None:
+        if path.endswith(".html"):
+            return Response(
+                "<html><body style='font-family:monospace;background:#06050E;color:#9D8FC7;"
+                "display:flex;align-items:center;justify-content:center;height:100vh'>"
+                "no index.html yet — ask the agent to build one</body></html>",
+                media_type="text/html",
+            )
+        raise HTTPException(404, f"{path} not found")
+    media_type = mimetypes.guess_type(path)[0] or "text/plain"
+    return Response(content, media_type=media_type)
 
 
 @router.websocket("/{session_id}/stream")
