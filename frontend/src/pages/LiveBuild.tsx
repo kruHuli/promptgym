@@ -58,14 +58,12 @@ export default function LiveBuild() {
   const isWorking = !isDone && messages.length > 0 && messages[messages.length - 1].role === 'user'
 
   // ponytail: transcript as a virtual file derived from messages — no backend storage
-  const allFiles = messages.length
-    ? {
-        ...files,
-        'transcript.md': messages
-          .map((m) => `**${m.role}:**\n\n${m.content}`)
-          .join('\n\n---\n\n'),
-      }
-    : files
+  const allFiles: Record<string, string> = {
+    ...files,
+    'transcript.md': messages.length
+      ? messages.map((m) => `**${m.role}:**\n\n${m.content}`).join('\n\n---\n\n')
+      : 'no messages yet',
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-bg-base">
