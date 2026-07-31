@@ -75,9 +75,6 @@
     z-index: -1;
     transition: background 0.25s;
   }
-  .card-gradient:hover::before {
-    background: linear-gradient(135deg, #A855F7, #06B6D4);
-  }
   .card-gradient:hover {
     box-shadow: 0 0 28px rgba(168, 85, 247, 0.18);
   }

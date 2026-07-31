@@ -88,10 +88,10 @@ export default function Lobby() {
                 </span>
                 <span className="tag-score">{ch.time_limit_minutes}m</span>
               </div>
-              <h3 className="text-text-primary font-semibold text-sm leading-snug mb-2 group-hover:text-accent-primary transition-colors">
+              <h3 className="text-white font-semibold text-sm leading-snug mb-2 group-hover:underline">
                 {ch.title}
               </h3>
-              <p className="text-text-muted text-xs font-mono leading-relaxed line-clamp-3">
+              <p className="text-white/60 text-xs font-mono leading-relaxed line-clamp-3">
                 {ch.brief_markdown.replace(/^#+\s/gm, '').slice(0, 120)}…
               </p>
             </button>
