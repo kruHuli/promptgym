@@ -13,11 +13,15 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export default function Terms() {
+export default function Terms({ onAccept }: { onAccept?: () => void } = {}) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
       <h1 className="text-2xl font-mono font-bold text-text-primary mb-1">Terms of Service</h1>
-      <p className="text-xs font-mono text-text-muted mb-10">Last updated: {UPDATED}</p>
+      <p className="text-xs font-mono text-text-muted mb-10">
+        {onAccept
+          ? 'Please review and accept before using PromptGym.'
+          : `Last updated: ${UPDATED}`}
+      </p>
 
       <Section title="1. What PromptGym is">
         <p>
@@ -88,9 +92,15 @@ export default function Terms() {
         </p>
       </Section>
 
-      <NavLink to="/" className="text-sm font-mono text-accent-primary hover:underline">
-        ← Back to challenges
-      </NavLink>
+      {onAccept ? (
+        <button className="btn-primary" onClick={onAccept}>
+          I Agree — Enter PromptGym
+        </button>
+      ) : (
+        <NavLink to="/" className="text-sm font-mono text-accent-primary hover:underline">
+          ← Back to challenges
+        </NavLink>
+      )}
     </div>
   )
 }

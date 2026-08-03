@@ -41,6 +41,21 @@ function AppShell() {
   // Hide global nav inside the arena (LiveBuild has its own header)
   const isArena = /^\/sessions\/\d+$/.test(location.pathname)
 
+  // First-visit ToS gate — block the app until accepted (remembered in localStorage)
+  const [tosAccepted, setTosAccepted] = React.useState(
+    () => localStorage.getItem('tos-accepted') === '1'
+  )
+  if (!tosAccepted) {
+    return (
+      <div className="min-h-screen bg-bg-base">
+        <Terms onAccept={() => {
+          localStorage.setItem('tos-accepted', '1')
+          setTosAccepted(true)
+        }} />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-bg-base">
       {!isArena && (
