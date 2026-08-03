@@ -5,6 +5,7 @@ import ChallengeBrief from './pages/ChallengeBrief'
 import LiveBuild from './pages/LiveBuild'
 import Results from './pages/Results'
 import Dashboard from './pages/Dashboard'
+import Terms from './pages/Terms'
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -62,6 +63,7 @@ function AppShell() {
           <Route path="/sessions/:id" element={<LiveBuild />} />
           <Route path="/sessions/:id/results" element={<Results />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="*" element={
             <div className="text-text-muted text-center py-20">
               404 — Page not found.{' '}
@@ -70,6 +72,13 @@ function AppShell() {
           } />
         </Routes>
       </ErrorBoundary>
+      {!isArena && (
+        <footer className="border-t border-bg-border px-6 h-10 flex items-center justify-center">
+          <NavLink to="/terms" className="text-xs font-mono text-text-muted hover:text-text-secondary transition-colors">
+            Terms of Service
+          </NavLink>
+        </footer>
+      )}
     </div>
   )
 }
